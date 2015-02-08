@@ -2,6 +2,8 @@ package tracks
 
 import (
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"log"
 	"os/exec"
 	"testing"
@@ -80,11 +82,32 @@ func TestDoctrack(t *testing.T) {
 	}
 }
 
+func ExampleTracks() {
+	filter := &Tracks{Prefix: "n", Current: 100}
+
+	json := pandoc2json(newtracks)
+
+	newjson := pandocfilter.Walk(filter, "", json)
+
+	markdown := json2pandoc(newjson)
+
+	fmt.Println(markdown)
+
+	// output:
+	// ---
+	// title: Titel
+	// tracks: n100
+
+	// ...
+	// Tracks {#n101}
+	// ======
+}
+
 func pandoc2json(doc string) interface{} {
 	// for some reason
 	// cmd := exec.Command("pandoc", "-t json")
 	// lets pandoc produce the error "pandoc: Unknown writer:  plain"
-
+	// this is a pity, for tests will not work on windows
 	cmd := exec.Command("bash", "-c", "pandoc -t json")
 
 	stdin, err := cmd.StdinPipe()
@@ -115,13 +138,51 @@ func pandoc2json(doc string) interface{} {
 		return "no output 4"
 	}
 
-	// out, err := ioutil.ReadAll(stdout)
-
-	// if err != nil {
-	// 	return "no output 5"
-	// }
-
 	cmd.Wait()
 
 	return pandoc
+}
+
+func json2pandoc(data interface{}) string {
+
+	// we kunnen de huidige applicate testen, niet als de standaard
+	// --filter, maar op de omslachtige manier: vanuit json
+	// weer naar markdown
+
+	cmd := exec.Command("bash", "-c", "pandoc -s -f json -t markdown")
+
+	stdin, err := cmd.StdinPipe()
+
+	if err != nil {
+		return "no output 1"
+	}
+
+	stdout, err := cmd.StdoutPipe()
+
+	if err != nil {
+		return "no output 2"
+	}
+
+	if err := cmd.Start(); err != nil {
+		return "no output 3"
+	}
+
+	// from runner - we need pandoc to feed with json strings
+
+	encoder := json.NewEncoder(stdin)
+
+	if err := encoder.Encode(&data); err != nil {
+		log.Println(err)
+		return ""
+	}
+
+	stdin.Close()
+
+	out, err := ioutil.ReadAll(stdout)
+
+	if err != nil {
+		return "no output"
+	}
+
+	return string(out)
 }
