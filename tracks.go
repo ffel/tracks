@@ -42,7 +42,7 @@ func (tr *Tracks) Value(key string, value interface{}) (bool, interface{}) {
 					panic("ok was already established")
 				}
 
-				meta["track"] = map[string]interface{}{
+				meta["tracks"] = map[string]interface{}{
 					"t": "MetaInlines",
 					"c": []interface{}{
 						map[string]interface{}{

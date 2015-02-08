@@ -51,8 +51,11 @@ title: Titel
 tracks: n12345
 ...
 
-Tracks
-======
+Header 1 {#n987}
+========
+
+Header 2
+========
 `
 
 func TestDoctrack(t *testing.T) {
@@ -82,7 +85,7 @@ func TestDoctrack(t *testing.T) {
 	}
 }
 
-func ExampleTracks() {
+func Example_Tracks() {
 	filter := &Tracks{Prefix: "n", Current: 100}
 
 	json := pandoc2json(newtracks)
@@ -97,10 +100,34 @@ func ExampleTracks() {
 	// ---
 	// title: Titel
 	// tracks: n100
-
 	// ...
+	//
 	// Tracks {#n101}
 	// ======
+}
+
+func Example_Tracks2() {
+	filter := &Tracks{Prefix: "n", Current: 100}
+
+	json := pandoc2json(existingtracks)
+
+	newjson := pandocfilter.Walk(filter, "", json)
+
+	markdown := json2pandoc(newjson)
+
+	fmt.Println(markdown)
+
+	// output:
+	// ---
+	// title: Titel
+	// tracks: n12345
+	// ...
+	//
+	// Header 1 {#n987}
+	// ========
+	//
+	// Header 2 {#n100}
+	// ========
 }
 
 func pandoc2json(doc string) interface{} {
