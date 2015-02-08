@@ -3,46 +3,55 @@ package main
 import (
 	"flag"
 	"log"
+	"strconv"
 
 	"github.com/rakyll/globalconf"
 )
 
 var (
-	flagName    = flag.String("name", "default name", "Name of the person.")
-	flagAddress = flag.String("addr", "default address", "Address of the person.")
+	current = flag.Int("current", -1, "do not set unless you know what you're doing...")
 )
 
 func main() {
 	// read from / write to ~/.config/appname/config.ini
 	conf, err := globalconf.New("appname")
+	conf.ParseAll()
 
 	if err != nil {
 		log.Fatalf("error: %v", err)
 	}
 
-	println(*flagName)
-	println(*flagAddress)
+	println(*current)
 
-	// this does write in ~/.config/appname/config.ini
-	conf.Set("demo", &flag.Flag{Name: "a", Value: newFlagValue("test")})
+	if *current < 0 {
+		*current = 0
+	}
 
+	*current++
+
+	conf.Set("", &flag.Flag{Name: "current", Value: newFlagValue(*current)})
 }
 
 // from https://github.com/rakyll/globalconf/blob/master/globalconf_test.go
 
 type flagValue struct {
-	str string
+	val int
 }
 
 func (f *flagValue) String() string {
-	return f.str
+	return strconv.Itoa(f.val)
 }
 
 func (f *flagValue) Set(value string) error {
-	f.str = value
-	return nil
+	val, err := strconv.Atoi(value)
+
+	if err == nil {
+		f.val = val
+	}
+
+	return err
 }
 
-func newFlagValue(val string) *flagValue {
-	return &flagValue{str: val}
+func newFlagValue(val int) *flagValue {
+	return &flagValue{val: val}
 }
