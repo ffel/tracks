@@ -27,15 +27,13 @@ type Tracks struct {
 func (tr *Tracks) Value(key string, value interface{}) (bool, interface{}) {
 
 	if !tr.checkedDoc {
-		ok, hastrack, val := doctrack(value)
+		checked, hastrack, val := doctrack(value)
 
-		println("--", ok, hastrack, val)
-
-		if ok {
+		if checked {
 			tr.checkedDoc = true
 			tr.trackDoc = hastrack
 
-			if !tr.exists(val) {
+			if tr.trackDoc && !tr.exists(val) {
 				tr.node = tr.nextNode()
 
 				ok2, meta := pandocfilter.IsMeta(value)
@@ -120,15 +118,11 @@ func doctrack(val interface{}) (ismeta, track bool, node string) {
 		return false, false, ""
 	}
 
-	println("is meta")
-
 	tr, hasTrack := meta["tracks"]
 
 	if !hasTrack {
 		return true, false, ""
 	}
-
-	println("has track")
 
 	istc, t, c := pandocfilter.IsTypeContents(tr)
 
@@ -136,21 +130,18 @@ func doctrack(val interface{}) (ismeta, track bool, node string) {
 		return true, false, ""
 	}
 
-	println("is tc")
-
 	if t != "MetaInlines" {
 		return true, true, ""
 	}
 
-	println("is meta inlines")
-
-	content, err := pandocfilter.GetString(c, "0")
+	content, err := pandocfilter.GetString(c, "0", "c")
 
 	if err != nil {
+
+		println("error", err.Error())
+
 		return true, true, ""
 	}
-
-	println("is string")
 
 	return true, true, content
 }
