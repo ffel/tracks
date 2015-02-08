@@ -17,10 +17,51 @@ func init() {
 type Tracks struct {
 	Prefix  string
 	Current int
+
+	checkedDoc bool   // meta is read and track attribute is assessed
+	trackDoc   bool   // doc has tracks attribute
+	node       string // doc node (iff trackDoc)
 }
 
 // Value implements pandocfilter Filter interface
 func (tr *Tracks) Value(key string, value interface{}) (bool, interface{}) {
+
+	if !tr.checkedDoc {
+		ok, hastrack, val := doctrack(value)
+
+		println("--", ok, hastrack, val)
+
+		if ok {
+			tr.checkedDoc = true
+			tr.trackDoc = hastrack
+
+			if !tr.exists(val) {
+				tr.node = tr.nextNode()
+
+				ok2, meta := pandocfilter.IsMeta(value)
+
+				if !ok2 {
+					panic("ok was already established")
+				}
+
+				meta["track"] = map[string]interface{}{
+					"t": "MetaInlines",
+					"c": []interface{}{
+						map[string]interface{}{
+							"t": "Str",
+							"c": tr.node,
+						},
+					},
+				}
+			} else {
+				tr.node = val
+			}
+
+			return false, value
+		}
+	} else if !tr.trackDoc {
+		return false, value
+	}
 
 	ok, t, c := pandocfilter.IsTypeContents(value)
 
@@ -35,8 +76,9 @@ func (tr *Tracks) Value(key string, value interface{}) (bool, interface{}) {
 			return true, value
 		}
 
-		slice[0] = tr.Prefix + strconv.Itoa(tr.Current)
-		tr.Current++
+		slice[0] = tr.nextNode()
+		// slice[0] = tr.Prefix + strconv.Itoa(tr.Current)
+		// tr.Current++
 
 		return false, value
 	}
@@ -44,7 +86,14 @@ func (tr *Tracks) Value(key string, value interface{}) (bool, interface{}) {
 	return true, value
 }
 
-// exists checks whether ref could be tracks ref
+// assign next free node
+func (tr *Tracks) nextNode() string {
+	defer func() { tr.Current++ }()
+
+	return tr.Prefix + strconv.Itoa(tr.Current)
+}
+
+// exists checks whether ref is valid tracks ref
 func (tr *Tracks) exists(ref string) bool {
 	match := refPatt.FindStringSubmatch(ref)
 
@@ -57,4 +106,51 @@ func (tr *Tracks) exists(ref string) bool {
 	}
 
 	return true
+}
+
+// doctrack checks val for track attribute
+//
+// meta is true in case having track attribute or not could be established
+// track is true if such an attribute could be found
+// node contains track string value (if any, otherwise "")
+func doctrack(val interface{}) (ismeta, track bool, node string) {
+	ok, meta := pandocfilter.IsMeta(val)
+
+	if !ok {
+		return false, false, ""
+	}
+
+	println("is meta")
+
+	tr, hasTrack := meta["tracks"]
+
+	if !hasTrack {
+		return true, false, ""
+	}
+
+	println("has track")
+
+	istc, t, c := pandocfilter.IsTypeContents(tr)
+
+	if !istc {
+		return true, false, ""
+	}
+
+	println("is tc")
+
+	if t != "MetaInlines" {
+		return true, true, ""
+	}
+
+	println("is meta inlines")
+
+	content, err := pandocfilter.GetString(c, "0")
+
+	if err != nil {
+		return true, true, ""
+	}
+
+	println("is string")
+
+	return true, true, content
 }
