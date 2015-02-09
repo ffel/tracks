@@ -2,17 +2,10 @@
 package tracks
 
 import (
-	"regexp"
 	"strconv"
 
 	"github.com/ffel/pandocfilter"
 )
-
-var refPatt *regexp.Regexp
-
-func init() {
-	refPatt = regexp.MustCompile(`^([[:alpha:]]+)([[:digit:]]+)$`)
-}
 
 type Tracks struct {
 	Prefix  string
