@@ -1,14 +1,8 @@
 package tracks
 
-import (
-	"flag"
-	"log"
-	"regexp"
-	"strconv"
-	"sync"
+// abstraction for getting next available node id
 
-	"github.com/rakyll/globalconf"
-)
+import "regexp"
 
 // move nextNode and exists to here ...
 // and it should use the provider
@@ -22,6 +16,7 @@ type TrackId string
 
 type Provider interface {
 	Provide() TrackId
+	Prefix() string
 }
 
 // implementation
@@ -32,64 +27,17 @@ func init() {
 	refPatt = regexp.MustCompile(`^([[:alpha:]]+)([[:digit:]]+)$`)
 }
 
-var provider Provider
+// exists checks whether ref is valid tracks ref
+func (tr *Tracks) exists(ref string) bool {
+	match := refPatt.FindStringSubmatch(ref)
 
-func init() {
-	current := flag.Int("current", -1, "do not set unless you know what you're doing...")
-
-	conf, err := globalconf.New("tracks")
-
-	if err != nil {
-		log.Fatalln(err)
+	if match == nil || len(match) < 3 {
+		return false
 	}
 
-	conf.ParseAll()
-
-	if *current < 0 {
-		*current = 0
+	if match[1] != tr.Provider.Prefix() {
+		return false
 	}
 
-	provider = &prvdr{conf: conf, current: *current}
-}
-
-type prvdr struct {
-	conf    *globalconf.GlobalConf
-	current int
-}
-
-func (p *prvdr) Provide() TrackId {
-	mutex := &sync.Mutex{}
-
-	mutex.Lock()
-	defer func() { mutex.Unlock() }()
-
-	c := p.current
-	p.current++
-	p.conf.Set("", &flag.Flag{Name: "current", Value: newFlagValue(p.current)})
-
-	id := "m" + strconv.Itoa(c)
-
-	return TrackId(id)
-}
-
-type flagValue struct {
-	val int
-}
-
-func (f *flagValue) String() string {
-	return strconv.Itoa(f.val)
-}
-
-func (f *flagValue) Set(value string) error {
-	val, err := strconv.Atoi(value)
-
-	if err == nil {
-		f.val = val
-	}
-
-	return err
-}
-
-func newFlagValue(val int) *flagValue {
-	return &flagValue{val: val}
+	return true
 }

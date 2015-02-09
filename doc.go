@@ -11,8 +11,8 @@ func (tr *Tracks) docCheck(value interface{}) bool {
 		tr.checkedDoc = true
 		tr.trackDoc = hastrack
 
-		if tr.trackDoc && !tr.exists(val) {
-			tr.node = tr.nextNode()
+		if tr.trackDoc && !tr.exists(string(val)) {
+			tr.node = tr.Provide()
 
 			ok2, meta := pandocfilter.IsMeta(value)
 
@@ -44,7 +44,7 @@ func (tr *Tracks) docCheck(value interface{}) bool {
 // meta is true in case having track attribute or not could be established
 // track is true if such an attribute could be found
 // node contains track string value (if any, otherwise "")
-func doctrack(val interface{}) (ismeta, track bool, node string) {
+func doctrack(val interface{}) (ismeta, track bool, node TrackId) {
 	ok, meta := pandocfilter.IsMeta(val)
 
 	if !ok {
@@ -76,5 +76,5 @@ func doctrack(val interface{}) (ismeta, track bool, node string) {
 		return true, true, ""
 	}
 
-	return true, true, content
+	return true, true, TrackId(content)
 }

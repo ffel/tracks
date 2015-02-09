@@ -62,7 +62,7 @@ func TestDoctrack(t *testing.T) {
 	tests := []struct {
 		in     string
 		tracks bool
-		key    string
+		key    TrackId
 	}{
 		{notracks, false, ""},
 		{newtracks, true, "n100"},
@@ -72,7 +72,7 @@ func TestDoctrack(t *testing.T) {
 	}
 
 	for i, tst := range tests {
-		filter := &Tracks{Prefix: "n", Current: 100}
+		filter := &Tracks{Provider: &providerMock{"n", 100}}
 		_ = pandocfilter.Walk(filter, "", pandoc2json(tst.in))
 
 		if expTracks := tst.tracks; filter.trackDoc != expTracks {
@@ -86,7 +86,7 @@ func TestDoctrack(t *testing.T) {
 }
 
 func Example_Tracks() {
-	filter := &Tracks{Prefix: "n", Current: 100}
+	filter := &Tracks{Provider: &providerMock{"n", 100}}
 
 	json := pandoc2json(newtracks)
 
@@ -107,7 +107,7 @@ func Example_Tracks() {
 }
 
 func Example_Tracks2() {
-	filter := &Tracks{Prefix: "n", Current: 100}
+	filter := &Tracks{Provider: &providerMock{"n", 100}}
 
 	json := pandoc2json(existingtracks)
 
