@@ -6,5 +6,5 @@ import (
 )
 
 func main() {
-	pandocfilter.Run(&tracks.Tracks{Prefix: "n", Current: 100})
+	pandocfilter.Run(&tracks.Tracks{Provider: tracks.GetProvider()})
 }
