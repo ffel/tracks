@@ -1,6 +1,6 @@
 package tracks
 
-// the provider for the real world application
+// the provider provides unique node id's for the real world application
 
 import (
 	"flag"

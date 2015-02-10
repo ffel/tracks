@@ -4,12 +4,6 @@ package tracks
 
 import "regexp"
 
-// move nextNode and exists to here ...
-// and it should use the provider
-
-// je moet een provider in Tracks stoppen, zodat je fatsoenlijk kan
-// unit testen met een mock van de echte provider
-
 // prepare for clean
 
 type TrackId string

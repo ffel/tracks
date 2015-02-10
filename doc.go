@@ -1,5 +1,7 @@
 package tracks
 
+// check the node at the main level, that is the document
+
 import "github.com/ffel/pandocfilter"
 
 // docCheck performs the doc check and returns true if
