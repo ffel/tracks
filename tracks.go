@@ -30,13 +30,11 @@ func (tr *Tracks) Value(key string, value interface{}) (bool, interface{}) {
 		slice, err := pandocfilter.GetSlice(c, "1")
 
 		if err != nil || len(slice) < 1 {
-			// could be false?
-			return true, value
+			return false, value
 		}
 
 		if tr.exists(slice[0].(string)) {
-			// could be false?
-			return true, value
+			return false, value
 		}
 
 		slice[0] = string(tr.Provide())
@@ -44,7 +42,5 @@ func (tr *Tracks) Value(key string, value interface{}) (bool, interface{}) {
 		return false, value
 	}
 
-	// if headers are very first level, there is no need to decend, if
-	// these are second level though, you have to decend indeed
 	return true, value
 }

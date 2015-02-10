@@ -53,13 +53,13 @@ func (p *prvdr) Provide() TrackId {
 	p.current++
 	p.conf.Set("", &flag.Flag{Name: "current", Value: newFlagValue(p.current)})
 
-	id := "m" + strconv.Itoa(c)
+	id := "n" + strconv.Itoa(c)
 
 	return TrackId(id)
 }
 
 func (p *prvdr) Prefix() string {
-	return "m"
+	return "n"
 }
 
 type flagValue struct {
